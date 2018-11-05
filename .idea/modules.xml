@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/befunge/befunge.iml" filepath="$PROJECT_DIR$/befunge/befunge.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ide/ide.iml" filepath="$PROJECT_DIR$/ide/ide.iml" />
+      <module fileurl="file://$PROJECT_DIR$/kotlin-befide.iml" filepath="$PROJECT_DIR$/kotlin-befide.iml" />
+    </modules>
+  </component>
+</project>

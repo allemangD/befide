@@ -1,0 +1,16 @@
+.lbl {
+    -fx-text-fill: maroon;
+}
+
+.val {
+    -fx-font-weight: bold;
+}
+
+#heightLabel {
+    -fx-font-style: italic;
+}
+
+GridPane {
+    -fx-font-size: 20px;
+    -fx-font-family: Consolas, monospace;
+}
