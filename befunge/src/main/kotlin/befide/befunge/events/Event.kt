@@ -1,15 +1,38 @@
 package befide.befunge.events
 
-/**
- * Source is pulled unmodified from https://github.com/notiocide/kotlin-events, under the MIT licence
- */
-
 import java.util.function.Consumer
 
 typealias Handler<EventType> = Consumer<EventType>
 
 internal operator fun <T> Handler<T>.invoke(t: T) = accept(t)
 
+/**
+ * Source is pulled unmodified from https://github.com/notiocide/kotlin-events, under the MIT licence
+ *
+ * Sample usage:
+ *
+ * ```
+ * data class ServerEvent(val joined: Boolean, val user: String)
+
+ * fun main(args: Array<String>) {
+ *     val event = Event<ServerEvent>()
+ *     var userCount = 0
+ *
+ *     event += { (joined, user) -> println("$user ${if (joined) "joined" else "left"}") }
+ *     event += { userCount += if (it.joined) 1 else -1 }
+ *
+ *     event(ServerEvent(true, "Alice"))
+ *     event(ServerEvent(true, "Bob"))
+ *     event(ServerEvent(true, "Charles"))
+ *
+ *     println("Users: $userCount")
+ *
+ *     event(ServerEvent(false, "Bob"))
+ *
+ *     println("Users: $userCount")
+ * }
+ * ```
+ */
 class Event<T> : Iterable<MutableMap.MutableEntry<String, Handler<T>>> {
 
     private val list = LinkedHashMap<String, Handler<T>>()

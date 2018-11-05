@@ -7,6 +7,7 @@ import javafx.scene.Parent
 import javafx.scene.control.Label
 import tornadofx.*
 
+
 class SampleView : View() {
     private val controller: SampleController by inject()
 
@@ -43,4 +44,8 @@ class SampleController : Controller() {
 
 class SampleApp : App() {
     override val primaryView = SampleView::class
+}
+
+fun main(args: Array<String>) {
+    launch<SampleApp>(args)
 }
