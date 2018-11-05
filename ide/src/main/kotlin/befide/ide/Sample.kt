@@ -31,6 +31,8 @@ class SampleController : Controller() {
     val height = SimpleIntegerProperty()
 
     init {
+        // sample event subscription. this is not necessary, but would update the
+        // width and height labels every time a value in the funge is changed
         bf.fungeChanged += { updateFungeLabels() }
 
         updateFungeLabels()
