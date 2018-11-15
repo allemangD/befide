@@ -33,10 +33,11 @@ class B93Interpreter : Interpreter {
 
     private fun pop(): Value {
         val v = _pop()
-        if (v != null) {
-            stackChanged(StackEvent(StackAction.Pop, listOf(v)))
-        }
-        return Value(0)
+        val ret = v?.let {
+            stackChanged(StackEvent(StackAction.Pop, listOf(it)))
+            it
+        } ?: Value(0)
+        return ret
     }
 
     private fun pop(num: Int): List<Value> {
@@ -59,6 +60,13 @@ class B93Interpreter : Interpreter {
         stackChanged.invoke(StackEvent(StackAction.Push, vs))
     }
 
+    private fun peek(): Value {
+        if (!stack.empty()) {
+            return stack.peek()
+        }
+        return Value(0)
+    }
+
     private fun binop(bop: Char) {
         val (vb, va) = pop(2)
         val a = va.value
@@ -68,10 +76,11 @@ class B93Interpreter : Interpreter {
             '-' -> a - b
             '*' -> a * b
             '/' -> a / b
+            '%' -> a % b
             '`' -> if (a > b) 1L else 0L
             else -> null
         }
-        if (res != null) {
+        res?.let {
             val vres = Value(res)
             push(vres)
         }
@@ -84,8 +93,8 @@ class B93Interpreter : Interpreter {
             '!' -> if (v == 0L) 1L else 0L
             else -> null
         }
-        if (res != null) {
-            val vres = Value(res)
+        res?.let {
+            val vres = Value(it)
             push(vres)
         }
     }
@@ -98,8 +107,8 @@ class B93Interpreter : Interpreter {
             'v' -> DOWN
             else -> null
         }
-        if (newDelta != null) {
-            ip.delta = newDelta
+        newDelta?.let {
+            ip.delta = it
         }
     }
 
@@ -117,8 +126,8 @@ class B93Interpreter : Interpreter {
             '_' -> if (cond) RIGHT else LEFT
             else -> null
         }
-        if (newDelta != null) {
-            ip.delta = newDelta
+        newDelta?.let {
+            ip.delta = it
         }
     }
 
@@ -134,12 +143,12 @@ class B93Interpreter : Interpreter {
     private fun stackop(sop: Char) {
         when (sop) {
             ':' -> {
-                val vc = stack.peek().copy()
+                val vc = peek().copy()
                 push(vc)
             }
             '\\' -> {
                 val (v2, v1) = pop(2)
-                push(listOf(v1, v2))
+                push(listOf(v2, v1))
             }
             '$' -> {
                 pop()
@@ -151,10 +160,11 @@ class B93Interpreter : Interpreter {
         val vv = pop()
         val v = vv.value
         val out = when (type) {
-            '.' -> v.toString().toCharArray()
+            '.' -> v.toString().toCharArray() + ' '
             ',' -> charArrayOf(v.toChar())
             else -> charArrayOf()
         }
+        print(out) //TEMPORARY
         //TODO output {out} chararray
     }
 
@@ -163,9 +173,13 @@ class B93Interpreter : Interpreter {
         // No ipChanged here, shown in execInstr
     }
 
-    private fun input() {
-        val inp = 0L //TODO get input
-        val vinp = Value(inp)
+    private fun input(type: Char) {
+        val inp = readLine()
+        val vinp = Value(when(type) {
+            '&' -> inp?.toLong() ?: 0L
+            '~' -> inp?.get(0)?.toLong() ?: 0L
+            else -> 0L
+        })
         push(vinp)
     }
 
@@ -198,6 +212,11 @@ class B93Interpreter : Interpreter {
         ip.mode = IpMode.Inactive
     }
 
+    private fun pushDig(dig: Char) {
+        val num = dig.toLong() - '0'.toLong()
+        push(Value(num))
+    }
+
     private fun noOp() {}
 
     private fun execInstr(instr: Value) {
@@ -215,10 +234,19 @@ class B93Interpreter : Interpreter {
             '#' -> stepIP()
             'g' -> fget()
             'p' -> fput()
-            '&', '~' -> input()
+            '&', '~' -> input(car)
             '@' -> terminate()
+            in '0'..'9' -> pushDig(car)
             else -> noOp()
         }
+    }
+
+    private fun strMode(instr: Value) {
+        if (instr.asChar == '"') {
+            toggleStrmode()
+            return
+        }
+        push(instr)
     }
 
     override fun step(): Boolean {
@@ -227,17 +255,19 @@ class B93Interpreter : Interpreter {
         when (ip.mode) {
             IpMode.Inactive -> noOp()
             IpMode.Normal -> execInstr(instr)
-            IpMode.String -> push(instr)
+            IpMode.String -> strMode(instr)
         }
         if (ip.mode != IpMode.Inactive) {
             stepIP()
-            while (funge[ip.pos].asChar == ' ') {
-                stepIP()
+            if (ip.mode != IpMode.String) {
+                while (funge[ip.pos].asChar == ' ') {
+                    stepIP()
+                }
             }
             val newIP = ip.copy()
             ipChanged(IpEvent(currIP, newIP))
         }
-        return true
+        return ip.mode != IpMode.Inactive
     }
 
     override fun reset() {
