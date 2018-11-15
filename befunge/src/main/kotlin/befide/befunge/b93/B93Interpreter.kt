@@ -1,7 +1,6 @@
 package befide.befunge.b93
 
 import befide.befunge.core.Interpreter
-import befide.befunge.core.Pointer
 import befide.befunge.events.*
 import befide.befunge.state.IpMode
 import befide.befunge.state.Value
@@ -32,7 +31,7 @@ class B93Interpreter : Interpreter {
         return null
     }
 
-    private fun popOne(): Value {
+    private fun pop(): Value {
         val v = _pop()
         if (v != null) {
             stackChanged(StackEvent(StackAction.Pop, listOf(v)))
@@ -40,7 +39,7 @@ class B93Interpreter : Interpreter {
         return Value(0)
     }
 
-    private fun popMany(num: Int): List<Value> {
+    private fun pop(num: Int): List<Value> {
         val vs = List(num) {_pop()}
         stackChanged(StackEvent(StackAction.Pop, vs.filterNotNull()))
         return vs.map { it ?: Value(0) }
@@ -50,18 +49,18 @@ class B93Interpreter : Interpreter {
         stack.push(v)
     }
 
-    private fun pushOne(v: Value) {
+    private fun push(v: Value) {
         _push(v)
         stackChanged.invoke(StackEvent(StackAction.Push, listOf(v)))
     }
 
-    private fun pushMany(vs: List<Value>) {
+    private fun push(vs: List<Value>) {
         vs.forEach { _push(it) }
         stackChanged.invoke(StackEvent(StackAction.Push, vs))
     }
 
     private fun binop(bop: Char) {
-        val (vb, va) = popMany(2)
+        val (vb, va) = pop(2)
         val a = va.value
         val b = vb.value
         val res = when(bop) {
@@ -74,12 +73,12 @@ class B93Interpreter : Interpreter {
         }
         if (res != null) {
             val vres = Value(res)
-            pushOne(vres)
+            push(vres)
         }
     }
 
     private fun unop(uop: Char) {
-        val vv = popOne()
+        val vv = pop()
         val v = vv.value
         val res = when(uop) {
             '!' -> if (v == 0L) 1L else 0L
@@ -87,7 +86,7 @@ class B93Interpreter : Interpreter {
         }
         if (res != null) {
             val vres = Value(res)
-            pushOne(vres)
+            push(vres)
         }
     }
 
@@ -111,7 +110,7 @@ class B93Interpreter : Interpreter {
     }
 
     private fun conditional(cop: Char) {
-        val vcond = popOne()
+        val vcond = pop()
         val cond = vcond.value == 0L
         val newDelta = when(cop) {
             '|' -> if (cond) DOWN else UP
@@ -136,20 +135,20 @@ class B93Interpreter : Interpreter {
         when (sop) {
             ':' -> {
                 val vc = stack.peek().copy()
-                pushOne(vc)
+                push(vc)
             }
             '\\' -> {
-                val (v2, v1) = popMany(2)
-                pushMany(listOf(v1, v2))
+                val (v2, v1) = pop(2)
+                push(listOf(v1, v2))
             }
             '$' -> {
-                popOne()
+                pop()
             }
         }
     }
 
     private fun output(type: Char) {
-        val vv = popOne()
+        val vv = pop()
         val v = vv.value
         val out = when (type) {
             '.' -> v.toString().toCharArray()
@@ -167,21 +166,21 @@ class B93Interpreter : Interpreter {
     private fun input() {
         val inp = 0L //TODO get input
         val vinp = Value(inp)
-        pushOne(vinp)
+        push(vinp)
     }
 
     private fun fget() {
-        val (vy, vx) = popMany(2)
+        val (vy, vx) = pop(2)
         val x = vx.value.toInt()
         val y = vy.value.toInt()
         if (0 <= x && x < funge.width && 0 <= y && y <= funge.height) {
             val vv = funge[Vec(x, y)]
-            pushOne(vv)
+            push(vv)
         }
     }
 
     private fun fput() {
-        val (vy, vx, vv) = popMany(3)
+        val (vy, vx, vv) = pop(3)
         val x = vx.value.toInt()
         val y = vy.value.toInt()
         if (0 <= x && x < funge.width && 0 <= y && y <= funge.height) {
@@ -228,7 +227,7 @@ class B93Interpreter : Interpreter {
         when (ip.mode) {
             IpMode.Inactive -> noOp()
             IpMode.Normal -> execInstr(instr)
-            IpMode.String -> pushOne(instr)
+            IpMode.String -> push(instr)
         }
         if (ip.mode != IpMode.Inactive) {
             stepIP()
