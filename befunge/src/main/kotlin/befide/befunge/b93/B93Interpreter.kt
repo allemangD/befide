@@ -26,11 +26,42 @@ class B93Interpreter : Interpreter {
 
     private val fungeMods = HashMap<Vec,Value>()
 
+    private fun _pop(): Value? {
+        if (!stack.empty())
+            return stack.pop()
+        return null
+    }
+
+    private fun popOne(): Value {
+        val v = _pop()
+        if (v != null) {
+            stackChanged(StackEvent(StackAction.Pop, listOf(v)))
+        }
+        return Value(0)
+    }
+
+    private fun popMany(num: Int): List<Value> {
+        val vs = List(num) {_pop()}
+        stackChanged(StackEvent(StackAction.Pop, vs.filterNotNull()))
+        return vs.map { it ?: Value(0) }
+    }
+
+    private fun _push(v: Value) {
+        stack.push(v)
+    }
+
+    private fun pushOne(v: Value) {
+        _push(v)
+        stackChanged.invoke(StackEvent(StackAction.Push, listOf(v)))
+    }
+
+    private fun pushMany(vs: List<Value>) {
+        vs.forEach { _push(it) }
+        stackChanged.invoke(StackEvent(StackAction.Push, vs))
+    }
 
     private fun binop(bop: Char) {
-        val vb = stack.pop()
-        val va = stack.pop()
-        stackChanged.invoke(StackEvent(StackAction.Pop, listOf(vb, va)))
+        val (vb, va) = popMany(2)
         val a = va.value
         val b = vb.value
         val res = when(bop) {
@@ -43,14 +74,12 @@ class B93Interpreter : Interpreter {
         }
         if (res != null) {
             val vres = Value(res)
-            stack.push(vres)
-            stackChanged.invoke(StackEvent(StackAction.Push, listOf(vres)))
+            pushOne(vres)
         }
     }
 
     private fun unop(uop: Char) {
-        val vv = stack.pop()
-        stackChanged.invoke(StackEvent(StackAction.Pop, listOf(vv)))
+        val vv = popOne()
         val v = vv.value
         val res = when(uop) {
             '!' -> if (v == 0L) 1L else 0L
@@ -58,8 +87,7 @@ class B93Interpreter : Interpreter {
         }
         if (res != null) {
             val vres = Value(res)
-            stack.push(vres)
-            stackChanged.invoke(StackEvent(StackAction.Push, listOf(vres)))
+            pushOne(vres)
         }
     }
 
@@ -83,8 +111,7 @@ class B93Interpreter : Interpreter {
     }
 
     private fun conditional(cop: Char) {
-        val vcond = stack.pop()
-        stackChanged.invoke(StackEvent(StackAction.Pop, listOf(vcond)))
+        val vcond = popOne()
         val cond = vcond.value == 0L
         val newDelta = when(cop) {
             '|' -> if (cond) DOWN else UP
@@ -106,29 +133,23 @@ class B93Interpreter : Interpreter {
     }
 
     private fun stackop(sop: Char) {
-        val vv2 = stack.pop()
-        stackChanged.invoke(StackEvent(StackAction.Pop, listOf(vv2)))
         when (sop) {
             ':' -> {
-                val vv2c = vv2.copy()
-                stack.push(vv2)
-                stack.push(vv2c)
-                stackChanged.invoke(StackEvent(StackAction.Push, listOf(vv2, vv2c)))
+                val vc = stack.peek().copy()
+                pushOne(vc)
             }
             '\\' -> {
-                val vv1 = stack.pop()
-                stackChanged.invoke(StackEvent(StackAction.Pop, listOf(vv2)))
-                stack.push(vv2)
-                stack.push(vv1)
-                stackChanged.invoke(StackEvent(StackAction.Push, listOf(vv1, vv2)))
+                val (v2, v1) = popMany(2)
+                pushMany(listOf(v1, v2))
             }
-            '$' -> noOp()
+            '$' -> {
+                popOne()
+            }
         }
     }
 
     private fun output(type: Char) {
-        val vv = stack.pop()
-        stackChanged.invoke(StackEvent(StackAction.Pop, listOf(vv)))
+        val vv = popOne()
         val v = vv.value
         val out = when (type) {
             '.' -> v.toString().toCharArray()
@@ -146,28 +167,21 @@ class B93Interpreter : Interpreter {
     private fun input() {
         val inp = 0L //TODO get input
         val vinp = Value(inp)
-        stack.push(vinp)
-        stackChanged(StackEvent(StackAction.Push, listOf(vinp)))
+        pushOne(vinp)
     }
 
     private fun fget() {
-        val vy = stack.pop()
-        val vx = stack.pop()
-        stackChanged.invoke(StackEvent(StackAction.Pop, listOf(vy, vx)))
+        val (vy, vx) = popMany(2)
         val x = vx.value.toInt()
         val y = vy.value.toInt()
         if (0 <= x && x < funge.width && 0 <= y && y <= funge.height) {
             val vv = funge[Vec(x, y)]
-            stack.push(vv)
-            stackChanged(StackEvent(StackAction.Push, listOf(vv)))
+            pushOne(vv)
         }
     }
 
     private fun fput() {
-        val vy = stack.pop()
-        val vx = stack.pop()
-        val vv = stack.pop()
-        stackChanged.invoke(StackEvent(StackAction.Pop, listOf(vy, vx, vv)))
+        val (vy, vx, vv) = popMany(3)
         val x = vx.value.toInt()
         val y = vy.value.toInt()
         if (0 <= x && x < funge.width && 0 <= y && y <= funge.height) {
@@ -208,18 +222,13 @@ class B93Interpreter : Interpreter {
         }
     }
 
-    private fun pushCar(v: Value) {
-        stack.push(v)
-        stackChanged(StackEvent(StackAction.Push, listOf(v)))
-    }
-
     override fun step(): Boolean {
         val instr = funge[ip.pos]
         val currIP = ip.copy()
         when (ip.mode) {
             IpMode.Inactive -> noOp()
             IpMode.Normal -> execInstr(instr)
-            IpMode.String -> pushCar(instr)
+            IpMode.String -> pushOne(instr)
         }
         if (ip.mode != IpMode.Inactive) {
             stepIP()
