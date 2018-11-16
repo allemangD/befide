@@ -285,6 +285,7 @@ class B93Interpreter : Interpreter {
         for ((k,v) in fungeMods) {
             funge[k] = v
         }
+        fungeMods.clear()
         fungeChanged(FungeEvent(changes))
     }
 }
