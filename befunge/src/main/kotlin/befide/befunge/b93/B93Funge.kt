@@ -6,7 +6,7 @@ import befide.befunge.state.*
 class B93Funge : Funge {
     override val width = 80
     override val height = 25
-    private var cars = Array(height) { Array(width) {' '.toLong()}}
+    private var cars = Array(height) { Array(width) { ' '.toLong() } }
 
     override fun get(vec: Vec): Value {
         return Value(cars[vec.y][vec.x])
@@ -32,17 +32,17 @@ class B93Funge : Funge {
             y += height
         }
 
-        return Vec(x,y)
+        return Vec(x, y)
     }
 
     override fun setString(data: String) {
         val strings = data.split('\n')
         for (i in strings.size until height) {
-            cars[i] = Array(width) {' '.toLong()}
+            cars[i] = Array(width) { ' '.toLong() }
         }
         strings.map {
-                    it.toList().map{it.toLong()}
-                }
+            it.toList().map { it.toLong() }
+        }
                 .forEachIndexed { index, list ->
                     if (index > height) {
                         return
@@ -50,13 +50,17 @@ class B93Funge : Funge {
                     cars[index] = (
                             list.toList() + List(
                                     if (list.size <= width) width - list.size else 0
-                                ){
-                                    ' '.toLong()
-                                }
+                            ) {
+                                ' '.toLong()
+                            }
                             )
                             .subList(0, width)
                             .toTypedArray()
                 }
+    }
+
+    override fun toString(): String {
+        return cars.map { it.map { Value(it).asChar ?: '?' }.joinToString("") }.joinToString("\n")
     }
 }
 
