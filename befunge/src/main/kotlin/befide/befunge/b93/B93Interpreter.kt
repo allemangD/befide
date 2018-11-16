@@ -1,16 +1,20 @@
 package befide.befunge.b93
 
 import befide.befunge.core.Interpreter
-import befide.befunge.events.Event
-import befide.befunge.events.FungeEvent
-import befide.befunge.events.IpEvent
-import befide.befunge.events.StackEvent
+import befide.befunge.events.*
 import befide.befunge.state.IpMode
 import befide.befunge.state.Value
 import befide.befunge.state.Vec
 import java.util.*
 
 class B93Interpreter : Interpreter {
+    private companion object {
+        val RIGHT = Vec(1, 0)
+        val LEFT = Vec(-1, 0)
+        val UP = Vec(0, -1)
+        val DOWN = Vec(0,1)
+    }
+
     override val funge = B93Funge()
     override val stack = Stack<Value>()
     override val ip = B93Pointer(Vec(0, 0), Vec(1, 0), IpMode.Normal)
@@ -19,11 +23,269 @@ class B93Interpreter : Interpreter {
     override val stackChanged: Event<StackEvent> = Event()
     override val ipChanged: Event<IpEvent> = Event()
 
+    private val fungeMods = HashMap<Vec,Value>()
+
+    private fun _pop(): Value? {
+        if (!stack.empty())
+            return stack.pop()
+        return null
+    }
+
+    private fun pop(): Value {
+        val v = _pop()
+        val ret = v?.let {
+            stackChanged(StackEvent(StackAction.Pop, listOf(it)))
+            it
+        } ?: Value(0)
+        return ret
+    }
+
+    private fun pop(num: Int): List<Value> {
+        val vs = List(num) {_pop()}
+        stackChanged(StackEvent(StackAction.Pop, vs.filterNotNull()))
+        return vs.map { it ?: Value(0) }
+    }
+
+    private fun _push(v: Value) {
+        stack.push(v)
+    }
+
+    private fun push(v: Value) {
+        _push(v)
+        stackChanged.invoke(StackEvent(StackAction.Push, listOf(v)))
+    }
+
+    private fun push(vs: List<Value>) {
+        vs.forEach { _push(it) }
+        stackChanged.invoke(StackEvent(StackAction.Push, vs))
+    }
+
+    private fun peek(): Value {
+        if (!stack.empty()) {
+            return stack.peek()
+        }
+        return Value(0)
+    }
+
+    private fun binop(bop: Char) {
+        val (vb, va) = pop(2)
+        val a = va.value
+        val b = vb.value
+        val res = when(bop) {
+            '+' -> a + b
+            '-' -> a - b
+            '*' -> a * b
+            '/' -> a / b
+            '%' -> a % b
+            '`' -> if (a > b) 1L else 0L
+            else -> null
+        }
+        res?.let {
+            val vres = Value(res)
+            push(vres)
+        }
+    }
+
+    private fun unop(uop: Char) {
+        val vv = pop()
+        val v = vv.value
+        val res = when(uop) {
+            '!' -> if (v == 0L) 1L else 0L
+            else -> null
+        }
+        res?.let {
+            val vres = Value(it)
+            push(vres)
+        }
+    }
+
+    private fun changeDir(dir: Char) {
+        val newDelta = when(dir) {
+            '>' -> RIGHT
+            '<' -> LEFT
+            '^' -> UP
+            'v' -> DOWN
+            else -> null
+        }
+        newDelta?.let {
+            ip.delta = it
+        }
+    }
+
+    private fun randomDir() {
+        val dirs = listOf('<', '>', '^', 'v')
+        val ind = Random().nextInt(4)
+        changeDir(dirs[ind])
+    }
+
+    private fun conditional(cop: Char) {
+        val vcond = pop()
+        val cond = vcond.value == 0L
+        val newDelta = when(cop) {
+            '|' -> if (cond) DOWN else UP
+            '_' -> if (cond) RIGHT else LEFT
+            else -> null
+        }
+        newDelta?.let {
+            ip.delta = it
+        }
+    }
+
+    private fun toggleStrmode() {
+        val newMode = when (ip.mode) {
+            IpMode.String -> IpMode.Normal
+            IpMode.Normal -> IpMode.String
+            IpMode.Inactive -> IpMode.Inactive
+        }
+        ip.mode = newMode
+    }
+
+    private fun stackop(sop: Char) {
+        when (sop) {
+            ':' -> {
+                val vc = peek().copy()
+                push(vc)
+            }
+            '\\' -> {
+                val (v2, v1) = pop(2)
+                push(listOf(v2, v1))
+            }
+            '$' -> {
+                pop()
+            }
+        }
+    }
+
+    private fun output(type: Char) {
+        val vv = pop()
+        val v = vv.value
+        val out = when (type) {
+            '.' -> v.toString().toCharArray() + ' '
+            ',' -> charArrayOf(v.toChar())
+            else -> charArrayOf()
+        }
+        print(out) //TEMPORARY
+        //TODO output {out} chararray
+    }
+
+    private fun stepIP() {
+        ip.pos = funge.nextVec(ip.pos, ip.delta)
+        // No ipChanged here, shown in execInstr
+    }
+
+    private fun input(type: Char) {
+        val inp = readLine()
+        val vinp = Value(when(type) {
+            '&' -> inp?.toLong() ?: 0L
+            '~' -> inp?.get(0)?.toLong() ?: 0L
+            else -> 0L
+        })
+        push(vinp)
+    }
+
+    private fun fget() {
+        val (vy, vx) = pop(2)
+        val x = vx.value.toInt()
+        val y = vy.value.toInt()
+        if (0 <= x && x < funge.width && 0 <= y && y <= funge.height) {
+            val vv = funge[Vec(x, y)]
+            push(vv)
+        }
+    }
+
+    private fun fput() {
+        val (vy, vx, vv) = pop(3)
+        val x = vx.value.toInt()
+        val y = vy.value.toInt()
+        if (0 <= x && x < funge.width && 0 <= y && y <= funge.height) {
+            val loc = Vec(x, y)
+            val old = funge[loc]
+            funge[loc] = vv
+            if (!fungeMods.contains(loc)) {
+                fungeMods[loc] = old
+            }
+            fungeChanged(FungeEvent(listOf(FungeChange(loc,old,vv))))
+        }
+    }
+
+    private fun terminate() {
+        ip.mode = IpMode.Inactive
+    }
+
+    private fun pushDig(dig: Char) {
+        val num = dig.toLong() - '0'.toLong()
+        push(Value(num))
+    }
+
+    private fun noOp() {}
+
+    private fun execInstr(instr: Value) {
+        val car = instr.asChar
+        when (car) {
+            null -> noOp()
+            '+', '-', '*', '/', '%', '`' -> binop(car)
+            '!' -> unop(car)
+            '>', '<', '^', 'v' -> changeDir(car)
+            '?' -> randomDir()
+            '_', '|' -> conditional(car)
+            '"' -> toggleStrmode()
+            ':', '\\', '$' -> stackop(car)
+            '.', ',' -> output(car)
+            '#' -> stepIP()
+            'g' -> fget()
+            'p' -> fput()
+            '&', '~' -> input(car)
+            '@' -> terminate()
+            in '0'..'9' -> pushDig(car)
+            else -> noOp()
+        }
+    }
+
+    private fun strMode(instr: Value) {
+        if (instr.asChar == '"') {
+            toggleStrmode()
+            return
+        }
+        push(instr)
+    }
+
     override fun step(): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val instr = funge[ip.pos]
+        val currIP = ip.copy()
+        when (ip.mode) {
+            IpMode.Inactive -> noOp()
+            IpMode.Normal -> execInstr(instr)
+            IpMode.String -> strMode(instr)
+        }
+        if (ip.mode != IpMode.Inactive) {
+            stepIP()
+            if (ip.mode != IpMode.String) {
+                while (funge[ip.pos].asChar == ' ') {
+                    stepIP()
+                }
+            }
+            val newIP = ip.copy()
+            ipChanged(IpEvent(currIP, newIP))
+        }
+        return ip.mode != IpMode.Inactive
     }
 
     override fun reset() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        val oldIP = ip.copy()
+        ip.pos = Vec(0,0)
+        ip.delta = RIGHT
+        ip.mode = IpMode.Normal
+        val newIP = ip.copy()
+        ipChanged.invoke(IpEvent(oldIP, newIP))
+
+        stack.clear()
+        stackChanged(StackEvent(StackAction.Clear, listOf()))
+
+        val changes = fungeMods.map { FungeChange(it.key, funge[it.key], it.value) }
+        for ((k,v) in fungeMods) {
+            funge[k] = v
+        }
+        fungeMods.clear()
+        fungeChanged(FungeEvent(changes))
     }
 }
