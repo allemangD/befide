@@ -13,8 +13,6 @@ class EditorView : View("Befide") {
     private val ioView = IOView(interp)
 
     override val root = borderpane {
-        addClass("editor-root")
-
         top { add(actionView) }
 
         center {
