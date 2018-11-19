@@ -4,6 +4,7 @@ import befide.befunge.core.*
 import befide.befunge.state.*
 
 fun <T> List<T>.padEnd(size: Int, factory: (Int) -> (T)): List<T> = this + (this.size until size).map { factory(it) }
+fun <T> List<T>.padEnd(size: Int, value: T): List<T> = this.padEnd(size) { value }
 
 class B93Funge : Funge {
     override val width = 80
@@ -27,15 +28,9 @@ class B93Funge : Funge {
 
     override fun setString(data: String) {
         cars = data.split("\n").map {
-            it.map {
-                Value(it)
-            }.padEnd(width) {
-                Value(' ')
-            }.toTypedArray()
+            it.map(::Value).padEnd(width, Value(' ')).toTypedArray()
         }.padEnd(height) {
-            Array(width) {
-                Value(' ')
-            }
+            Array(width) { Value(' ') }
         }.toTypedArray()
     }
 
