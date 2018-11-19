@@ -7,3 +7,7 @@
     -fx-font-family: monospace;
 }
 
+.editor-root {
+    -fx-padding: 4px;
+    -fx-border-insets: 4px;
+}
