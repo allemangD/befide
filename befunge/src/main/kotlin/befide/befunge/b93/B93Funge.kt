@@ -3,60 +3,43 @@ package befide.befunge.b93
 import befide.befunge.core.*
 import befide.befunge.state.*
 
+fun <T> List<T>.padEnd(size: Int, factory: (Int) -> (T)): List<T> = this + (this.size until size).map { factory(it) }
+fun <T> List<T>.padEnd(size: Int, value: T): List<T> = this.padEnd(size) { value }
+
 class B93Funge : Funge {
     override val width = 80
     override val height = 25
-    private var cars = Array(height) { Array(width) {' '.toLong()}}
+
+    val bounds = Vec(width, height)
+
+    private var cars = Array(height) { Array(width) { Value(' ') } }
 
     override fun get(vec: Vec): Value {
-        return Value(cars[vec.y][vec.x])
+        return cars[vec.y][vec.x]
     }
 
     override fun set(vec: Vec, value: Value) {
-        cars[vec.y][vec.x] = value.value
+        cars[vec.y][vec.x] = value
     }
 
     override fun nextVec(vec: Vec, delta: Vec): Vec {
-        var x = vec.x + delta.x
-        var y = vec.y + delta.y
-        if (x >= width || x < 0) {
-            x %= width
-        }
-        if (x < 0) {
-            x += width
-        }
-        if (y >= height || y < 0) {
-            y %= height
-        }
-        if (y < 0) {
-            y += height
-        }
-
-        return Vec(x,y)
+        return (vec + delta) mod bounds
     }
 
     override fun setString(data: String) {
-        val strings = data.split('\n')
-        for (i in strings.size until height) {
-            cars[i] = Array(width) {' '.toLong()}
+        cars = data.split("\n").map {
+            it.map(::Value).padEnd(width, Value(' ')).toTypedArray()
+        }.padEnd(height) {
+            Array(width) { Value(' ') }
+        }.toTypedArray()
+    }
+
+    override fun toString(): String {
+        return cars.joinToString("\n") { row ->
+            row.joinToString("") { value ->
+                (value.asChar ?: '?').toString()
+            }
         }
-        strings.map {
-                    it.toList().map{it.toLong()}
-                }
-                .forEachIndexed { index, list ->
-                    if (index > height) {
-                        return
-                    }
-                    cars[index] = (
-                            list.toList() + List(
-                                    if (list.size <= width) width - list.size else 0
-                                ){
-                                    ' '.toLong()
-                                }
-                            )
-                            .subList(0, width)
-                            .toTypedArray()
-                }
     }
 }
 
