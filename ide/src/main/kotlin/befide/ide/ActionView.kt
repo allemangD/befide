@@ -33,7 +33,7 @@ class ActionView(val interp: Interpreter, val ioView: IOView) : View() {
 
         button("run") {
             setOnAction {
-                runTimeline.rate = 1000.0
+                runTimeline.rate = 10000000.0
                 runTimeline.playFromStart()
             }
         }

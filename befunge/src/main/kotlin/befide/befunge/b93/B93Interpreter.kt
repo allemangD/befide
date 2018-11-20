@@ -27,7 +27,9 @@ class B93Interpreter : Interpreter {
     override val outputChanged: Event<OutputEvent> = Event()
 
     override val stdInput = LinkedList<Char>()
-    override val stdOutput = LinkedList<Char>()
+    override val stdOutput = LinkedList<String>()
+    private var outBuf: StringBuffer = StringBuffer()
+    private var bufLimit = 10
 
     private val fungeMods = HashMap<Vec,Value>()
 
@@ -174,13 +176,18 @@ class B93Interpreter : Interpreter {
         val vv = pop()
         val v = vv.value
         val out = when (type) {
-            '.' -> v.toString().toList() + ' '
-            ',' -> listOf(v.toChar())
-            else -> listOf()
+            '.' -> v.toString() + ' '
+            ',' -> v.toChar().toString()
+            else -> null
         }
-        stdOutput.addAll(out)
-        outputChanged.invoke(OutputEvent())
-        return true
+        return out?.let{
+            outBuf.append(it)
+            if (outBuf.length > bufLimit) {
+                stdOutput.add(outBuf.toString())
+                outBuf.delete(0, outBuf.length)
+                outputChanged.invoke(OutputEvent())
+            }
+        } != null
     }
 
     private fun stepIP(): Boolean {
@@ -255,6 +262,9 @@ class B93Interpreter : Interpreter {
     }
 
     private fun terminate(): Boolean {
+        stdOutput.add(outBuf.toString())
+        outBuf.delete(0, outBuf.length)
+        outputChanged.invoke(OutputEvent())
         ip.mode = IpMode.Inactive
         return true
     }

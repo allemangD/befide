@@ -16,9 +16,11 @@ class IOView(val interp: Interpreter) : View() {
 
     init {
         interp.outputChanged += {
+            var str = ""
             while (!interp.stdOutput.isEmpty()) {
-                output += interp.stdOutput.remove()
+                str += interp.stdOutput.remove()
             }
+            output += str
         }
         // add listeners to interp, handle streams, idk
     }

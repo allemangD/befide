@@ -23,7 +23,7 @@ interface Interpreter {
     val outputChanged: Event<OutputEvent>
 
     val stdInput: Queue<Char>
-    val stdOutput: Queue<Char>
+    val stdOutput: Queue<String>
 
     /**
      * @return If [ip] is inactive after this step, indicating execution has halted, then return `false`
