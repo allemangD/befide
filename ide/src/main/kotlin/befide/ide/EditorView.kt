@@ -8,9 +8,9 @@ class EditorView : View("Befide") {
     private var interp: Interpreter = B93Interpreter()
 
     private val codeView = CodeView(interp)
-    private val actionView = ActionView(interp)
     private val stackView = StackView(interp)
     private val ioView = IOView(interp)
+    private val actionView = ActionView(interp, ioView)
 
     override val root = borderpane {
         top { add(actionView) }

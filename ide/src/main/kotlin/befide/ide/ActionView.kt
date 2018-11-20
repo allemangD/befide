@@ -6,7 +6,7 @@ import javafx.animation.Timeline
 import javafx.util.Duration
 import tornadofx.*
 
-class ActionView(val interp: Interpreter) : View() {
+class ActionView(val interp: Interpreter, val ioView: IOView) : View() {
     var runTimeline: Timeline = timeline(false) {
         keyframe(Duration.seconds(0.0)) {
             setOnFinished {
@@ -25,7 +25,10 @@ class ActionView(val interp: Interpreter) : View() {
         }
 
         button("reset") {
-            setOnAction { interp.reset() }
+            setOnAction {
+                interp.reset()
+                ioView.reset()
+            }
         }
 
         button("run") {

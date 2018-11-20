@@ -14,6 +14,5 @@ class CodeView(val interp: Interpreter) : View() {
     }
 
     override val root = textarea(srcProperty) {
-
     }
 }

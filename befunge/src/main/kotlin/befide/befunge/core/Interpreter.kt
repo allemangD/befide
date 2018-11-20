@@ -1,11 +1,9 @@
 package befide.befunge.core
 
-import befide.befunge.events.Event
-import befide.befunge.events.FungeEvent
-import befide.befunge.events.IpEvent
-import befide.befunge.events.StackEvent
+import befide.befunge.events.*
 import befide.befunge.state.Value
 import java.util.*
+import java.util.concurrent.BlockingQueue
 
 /**
  * Interface for a Befunge interpreter
@@ -22,6 +20,10 @@ interface Interpreter {
     val fungeChanged: Event<FungeEvent>
     val stackChanged: Event<StackEvent>
     val ipChanged: Event<IpEvent>
+    val outputChanged: Event<OutputEvent>
+
+    val stdInput: Queue<Char>
+    val stdOutput: Queue<Char>
 
     /**
      * @return If [ip] is inactive after this step, indicating execution has halted, then return `false`
