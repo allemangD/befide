@@ -6,6 +6,8 @@ import befide.befunge.state.IpMode
 import befide.befunge.state.Value
 import befide.befunge.state.Vec
 import java.util.*
+import java.util.concurrent.BlockingQueue
+import java.util.concurrent.LinkedBlockingQueue
 
 class B93Interpreter : Interpreter {
     private companion object {
@@ -22,6 +24,12 @@ class B93Interpreter : Interpreter {
     override val fungeChanged: Event<FungeEvent> = Event()
     override val stackChanged: Event<StackEvent> = Event()
     override val ipChanged: Event<IpEvent> = Event()
+    override val outputChanged: Event<OutputEvent> = Event()
+
+    override val stdInput = LinkedList<Char>()
+    override val stdOutput = LinkedList<String>()
+    private var outBuf: StringBuffer = StringBuffer()
+    private var bufLimit = 10
 
     private val fungeMods = HashMap<Vec,Value>()
 
@@ -55,9 +63,10 @@ class B93Interpreter : Interpreter {
         stackChanged.invoke(StackEvent(StackAction.Push, listOf(v)))
     }
 
-    private fun push(vs: List<Value>) {
+    private fun push(v: Value, vararg vs: Value) {
+        _push(v)
         vs.forEach { _push(it) }
-        stackChanged.invoke(StackEvent(StackAction.Push, vs))
+        stackChanged.invoke(StackEvent(StackAction.Push, listOf(v) + vs.toList()))
     }
 
     private fun peek(): Value {
@@ -67,7 +76,7 @@ class B93Interpreter : Interpreter {
         return Value(0)
     }
 
-    private fun binop(bop: Char) {
+    private fun binop(bop: Char): Boolean {
         val (vb, va) = pop(2)
         val a = va.value
         val b = vb.value
@@ -80,26 +89,26 @@ class B93Interpreter : Interpreter {
             '`' -> if (a > b) 1L else 0L
             else -> null
         }
-        res?.let {
+        return res?.let {
             val vres = Value(res)
             push(vres)
-        }
+        } != null
     }
 
-    private fun unop(uop: Char) {
+    private fun unop(uop: Char): Boolean {
         val vv = pop()
         val v = vv.value
         val res = when(uop) {
             '!' -> if (v == 0L) 1L else 0L
             else -> null
         }
-        res?.let {
+        return res?.let {
             val vres = Value(it)
             push(vres)
-        }
+        } != null
     }
 
-    private fun changeDir(dir: Char) {
+    private fun changeDir(dir: Char): Boolean {
         val newDelta = when(dir) {
             '>' -> RIGHT
             '<' -> LEFT
@@ -107,18 +116,19 @@ class B93Interpreter : Interpreter {
             'v' -> DOWN
             else -> null
         }
-        newDelta?.let {
+        return newDelta?.let {
             ip.delta = it
-        }
+        } != null
     }
 
-    private fun randomDir() {
+    private fun randomDir(): Boolean {
         val dirs = listOf('<', '>', '^', 'v')
         val ind = Random().nextInt(4)
         changeDir(dirs[ind])
+        return true
     }
 
-    private fun conditional(cop: Char) {
+    private fun conditional(cop: Char): Boolean {
         val vcond = pop()
         val cond = vcond.value == 0L
         val newDelta = when(cop) {
@@ -126,21 +136,23 @@ class B93Interpreter : Interpreter {
             '_' -> if (cond) RIGHT else LEFT
             else -> null
         }
-        newDelta?.let {
+        return newDelta?.let {
             ip.delta = it
-        }
+        } != null
     }
 
-    private fun toggleStrmode() {
+    private fun toggleStrmode(): Boolean {
         val newMode = when (ip.mode) {
             IpMode.String -> IpMode.Normal
             IpMode.Normal -> IpMode.String
             IpMode.Inactive -> IpMode.Inactive
         }
         ip.mode = newMode
+        return true
     }
 
-    private fun stackop(sop: Char) {
+    private fun stackop(sop: Char): Boolean {
+        var ret = true
         when (sop) {
             ':' -> {
                 val vc = peek().copy()
@@ -148,52 +160,91 @@ class B93Interpreter : Interpreter {
             }
             '\\' -> {
                 val (v2, v1) = pop(2)
-                push(listOf(v2, v1))
+                push(v2, v1)
             }
             '$' -> {
                 pop()
             }
+            else -> {
+                ret = false
+            }
         }
+        return ret
     }
 
-    private fun output(type: Char) {
+    private fun output(type: Char): Boolean {
         val vv = pop()
         val v = vv.value
         val out = when (type) {
-            '.' -> v.toString().toCharArray() + ' '
-            ',' -> charArrayOf(v.toChar())
-            else -> charArrayOf()
+            '.' -> v.toString() + ' '
+            ',' -> v.toChar().toString()
+            else -> null
         }
-        print(out) //TEMPORARY
-        //TODO output {out} chararray
+        return out?.let{
+            outBuf.append(it)
+            if (outBuf.length > bufLimit) {
+                stdOutput.add(outBuf.toString())
+                outBuf.delete(0, outBuf.length)
+                outputChanged.invoke(OutputEvent())
+            }
+        } != null
     }
 
-    private fun stepIP() {
+    private fun stepIP(): Boolean {
         ip.pos = funge.nextVec(ip.pos, ip.delta)
+        return true
         // No ipChanged here, shown in execInstr
     }
 
-    private fun input(type: Char) {
-        val inp = readLine()
-        val vinp = Value(when(type) {
-            '&' -> inp?.toLong() ?: 0L
-            '~' -> inp?.get(0)?.toLong() ?: 0L
-            else -> 0L
-        })
-        push(vinp)
+    private fun input(type: Char): Boolean {
+        fun <T> Queue<T>.takeWhile(predicate: (T) -> Boolean): Sequence<T?> {
+            return sequence {
+                if (peek() == null) {
+                    yield(null)
+                }
+                else {
+                    while (peek()?.let(predicate) == true) {
+                        yield(remove())
+                    }
+                }
+                yield(null)
+            }
+        }
+
+        val zer = '0'.toLong()
+        val inp = when (type) {
+            '&' -> {
+                val nums = stdInput.takeWhile { it in '0' until '9' }
+                val first = nums.first()
+                first?.let {
+                    nums.filterNotNull()
+                            .map {c -> c.toLong() - zer}
+                            .fold(it.toLong()-zer) { curr: Long, next: Long ->
+                                curr * 10 + next
+                            }
+                }
+            }
+            '~' -> stdInput.poll()?.toLong()
+            else -> null
+        }
+        return inp?.let {
+            push(Value(it))
+        } != null
     }
 
-    private fun fget() {
+    private fun fget(): Boolean {
         val (vy, vx) = pop(2)
         val x = vx.value.toInt()
         val y = vy.value.toInt()
         if (0 <= x && x < funge.width && 0 <= y && y <= funge.height) {
             val vv = funge[Vec(x, y)]
             push(vv)
+            return true
         }
+        return false
     }
 
-    private fun fput() {
+    private fun fput(): Boolean {
         val (vy, vx, vv) = pop(3)
         val x = vx.value.toInt()
         val y = vy.value.toInt()
@@ -205,23 +256,30 @@ class B93Interpreter : Interpreter {
                 fungeMods[loc] = old
             }
             fungeChanged(FungeEvent(listOf(FungeChange(loc,old,vv))))
+            return true
         }
+        return false
     }
 
-    private fun terminate() {
+    private fun terminate(): Boolean {
+        stdOutput.add(outBuf.toString())
+        outBuf.delete(0, outBuf.length)
+        outputChanged.invoke(OutputEvent())
         ip.mode = IpMode.Inactive
+        return true
     }
 
-    private fun pushDig(dig: Char) {
+    private fun pushDig(dig: Char): Boolean {
         val num = dig.toLong() - '0'.toLong()
         push(Value(num))
+        return true
     }
 
-    private fun noOp() {}
+    private fun noOp(): Boolean = false
 
-    private fun execInstr(instr: Value) {
+    private fun execInstr(instr: Value): Boolean {
         val car = instr.asChar
-        when (car) {
+        return when (car) {
             null -> noOp()
             '+', '-', '*', '/', '%', '`' -> binop(car)
             '!' -> unop(car)
@@ -241,23 +299,24 @@ class B93Interpreter : Interpreter {
         }
     }
 
-    private fun strMode(instr: Value) {
+    private fun strMode(instr: Value): Boolean {
         if (instr.asChar == '"') {
             toggleStrmode()
-            return
+            return true
         }
         push(instr)
+        return true
     }
 
     override fun step(): Boolean {
         val instr = funge[ip.pos]
         val currIP = ip.copy()
-        when (ip.mode) {
+        val processed = when (ip.mode) {
             IpMode.Inactive -> noOp()
             IpMode.Normal -> execInstr(instr)
             IpMode.String -> strMode(instr)
         }
-        if (ip.mode != IpMode.Inactive) {
+        if (processed) {
             stepIP()
             if (ip.mode != IpMode.String) {
                 while (funge[ip.pos].asChar == ' ') {
@@ -280,6 +339,9 @@ class B93Interpreter : Interpreter {
 
         stack.clear()
         stackChanged(StackEvent(StackAction.Clear, listOf()))
+
+        stdInput.clear()
+        stdOutput.clear()
 
         val changes = fungeMods.map { FungeChange(it.key, funge[it.key], it.value) }
         for ((k,v) in fungeMods) {

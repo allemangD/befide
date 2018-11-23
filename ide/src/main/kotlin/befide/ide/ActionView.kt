@@ -6,7 +6,7 @@ import javafx.animation.Timeline
 import javafx.util.Duration
 import tornadofx.*
 
-class ActionView(val interp: Interpreter) : View() {
+class ActionView(val interp: Interpreter, val ioView: IOView) : View() {
     var runTimeline: Timeline = timeline(false) {
         keyframe(Duration.seconds(0.0)) {
             setOnFinished {
@@ -25,19 +25,29 @@ class ActionView(val interp: Interpreter) : View() {
         }
 
         button("reset") {
-            setOnAction { interp.reset() }
+            setOnAction {
+                interp.reset()
+                ioView.reset()
+            }
         }
 
         button("run") {
             setOnAction {
-                runTimeline.rate = 1000.0
+                runTimeline.rate = 10000000.0
+                runTimeline.playFromStart()
+            }
+        }
+
+        button("walk") {
+            setOnAction {
+                runTimeline.rate = 50.0
                 runTimeline.playFromStart()
             }
         }
 
         button("crawl") {
             setOnAction {
-                runTimeline.rate = 2.0
+                runTimeline.rate = 4.0
                 runTimeline.playFromStart()
             }
         }
