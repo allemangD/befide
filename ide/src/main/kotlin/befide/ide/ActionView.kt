@@ -38,9 +38,16 @@ class ActionView(val interp: Interpreter, val ioView: IOView) : View() {
             }
         }
 
+        button("walk") {
+            setOnAction {
+                runTimeline.rate = 50.0
+                runTimeline.playFromStart()
+            }
+        }
+
         button("crawl") {
             setOnAction {
-                runTimeline.rate = 2.0
+                runTimeline.rate = 4.0
                 runTimeline.playFromStart()
             }
         }
