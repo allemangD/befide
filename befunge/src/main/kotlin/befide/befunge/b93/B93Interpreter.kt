@@ -295,6 +295,7 @@ class B93Interpreter : Interpreter {
             '&', '~' -> input(car)
             '@' -> terminate()
             in '0'..'9' -> pushDig(car)
+            ' ' -> true
             else -> noOp()
         }
     }
@@ -319,8 +320,13 @@ class B93Interpreter : Interpreter {
         if (processed) {
             stepIP()
             if (ip.mode != IpMode.String) {
-                while (funge[ip.pos].asChar == ' ') {
+                var numsteps = 0
+                val maxsteps = if (funge.height > funge.width) funge.height else funge.width
+                while (funge[ip.pos].asChar == ' ' && numsteps++ < maxsteps) {
                     stepIP()
+                }
+                if (numsteps == maxsteps) {
+                    ip.mode = IpMode.Inactive
                 }
             }
             val newIP = ip.copy()
