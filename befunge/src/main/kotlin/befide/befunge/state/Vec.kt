@@ -10,4 +10,5 @@ data class Vec(val x: Int, val y: Int) {
     operator fun times(c: Int) = Vec(x * c, y * c)
 
     infix fun mod(other: Vec) = Vec(x mod other.x, y mod other.y)
+    operator fun unaryMinus() = Vec(-x, -y)
 }

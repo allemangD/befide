@@ -3,6 +3,45 @@
     -fx-font-fill: black;
 }
 
-.text-area {
-    -fx-font-family: monospace;
+.code, .text-area {
+    -fx-font-family: Consolas, monospace;
+    -fx-text-fill: black;
+}
+
+.code-view, .text-area {
+    -fx-border-color: #aaa;
+    -fx-border-radius: 2px;
+    -fx-border-width: 1px;
+    -fx-background-color: #fff;
+    -fx-graphic: none;
+}
+
+.code-num {
+    -fx-text-fill: #2d6a9c;
+}
+
+.code-funge {
+    -fx-text-fill: #258135;
+    -fx-font-style: italic;
+    -fx-font-weight: bold;
+}
+
+.code-dir {
+    -fx-text-fill: #b82893;
+}
+
+.code-str {
+    -fx-text-fill: #0a5158;
+}
+
+.code-cursor-ip {
+    -fx-background-color: rgba(39, 186, 235, 0.51);
+}
+
+.code-unknown {
+    -fx-background-color: rgba(216, 194, 155, 0.56);
+}
+
+.code-cursor {
+    -fx-background-color: rgba(0, 0, 0, 0.16);
 }

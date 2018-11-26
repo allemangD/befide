@@ -10,18 +10,14 @@ class EditorView : View("Befide") {
     private val codeView = CodeView(interp)
     private val stackView = StackView(interp)
     private val ioView = IOView(interp)
-    private val actionView = ActionView(interp, ioView)
+    private val actionView = ActionView(interp, codeView, ioView)
 
     override val root = borderpane {
         top { add(actionView) }
 
-        center {
-            add(codeView)
-        }
+        center { add(codeView) }
 
-        right {
-            add(stackView)
-        }
+        right { add(stackView) }
 
         bottom { add(ioView) }
     }
@@ -31,31 +27,13 @@ class EditorView : View("Befide") {
     ^  0 v +1\                   _^#-+*<               >22g02g*"_@"*-!1- #v_v>
        >:>::3g: ,\188                  ^^               -1\g21\g22<p3\"_":<
 ________________________________@_________________________________^  p3\"@":<"""
-//        codeView.src = """--------------------------------------------------------------------------------
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//            |-
-//        """.trimMargin()
+
+//        codeView.src = """"hello world",,,,,,,,,,@"""
+    }
+
+    override fun onDock() {
+        super.onDock()
+
+        codeView.root.requestFocus()
     }
 }

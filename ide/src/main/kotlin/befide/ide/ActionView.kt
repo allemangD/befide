@@ -6,7 +6,7 @@ import javafx.animation.Timeline
 import javafx.util.Duration
 import tornadofx.*
 
-class ActionView(val interp: Interpreter, val ioView: IOView) : View() {
+class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IOView) : View() {
     var runTimeline: Timeline = timeline(false) {
         keyframe(Duration.seconds(0.0)) {
             setOnFinished {
@@ -21,25 +21,36 @@ class ActionView(val interp: Interpreter, val ioView: IOView) : View() {
 
     override val root = hbox {
         button("step") {
-            setOnAction { interp.step() }
+            setOnAction {
+                interp.funge.setString(codeView.src)
+                interp.step()
+            }
         }
 
         button("reset") {
+            enableWhen(codeView.lockedProperty)
+
             setOnAction {
                 interp.reset()
                 ioView.reset()
+                codeView.src = interp.funge.toString()
+                codeView.locked = false
             }
         }
 
         button("run") {
             setOnAction {
-                runTimeline.rate = 10000000.0
+                interp.funge.setString(codeView.src)
+                codeView.locked = true
+                runTimeline.rate = 10000.0
                 runTimeline.playFromStart()
             }
         }
 
         button("walk") {
             setOnAction {
+                interp.funge.setString(codeView.src)
+                codeView.locked = true
                 runTimeline.rate = 50.0
                 runTimeline.playFromStart()
             }
@@ -47,6 +58,8 @@ class ActionView(val interp: Interpreter, val ioView: IOView) : View() {
 
         button("crawl") {
             setOnAction {
+                interp.funge.setString(codeView.src)
+                codeView.locked = true
                 runTimeline.rate = 4.0
                 runTimeline.playFromStart()
             }
