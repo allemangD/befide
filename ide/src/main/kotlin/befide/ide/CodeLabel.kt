@@ -17,6 +17,9 @@ class CodeLabel(val pos: Vec, val cursorPos: ObjectProperty<Vec>, val interp: In
         if (char in "0123456789") styleClass.add("code-num")
         if (char in "gp") styleClass.add("code-funge")
         if (char in "<>^v?#") styleClass.add("code-dir")
+        if (char in "@") styleClass.add("code-stop")
+        if (char in "_|") styleClass.add("code-condition")
+        if (char in "\"") styleClass.add("code-quote")
 
         if (pos == cursorPos.value) styleClass.add("code-cursor")
         if (pos == interp.ip.pos) styleClass.add("code-cursor-ip")

@@ -1,5 +1,5 @@
 * {
-    -fx-font-size: 14;
+    -fx-font-size: 18;
     -fx-font-fill: black;
 }
 
@@ -21,17 +21,27 @@
 }
 
 .code-funge {
-    -fx-text-fill: #258135;
+    -fx-text-fill: #418148;
     -fx-font-style: italic;
     -fx-font-weight: bold;
 }
 
 .code-dir {
     -fx-text-fill: #b82893;
+    -fx-font-weight: bold;
 }
 
-.code-str {
-    -fx-text-fill: #0a5158;
+.code-condition {
+    -fx-text-fill: #ffa235;
+}
+
+.code-stop{
+    -fx-font-weight: bold;
+    -fx-text-fill: #990208;
+}
+
+.code-quote {
+    -fx-text-fill: #258135;
 }
 
 .code-cursor-ip {
