@@ -14,6 +14,14 @@ class B93Funge : Funge {
 
     private var cars = Array(height) { Array(width) { Value(' ') } }
 
+    override var values
+        get() = cars.map { it.toList() }
+        set(data) {
+            for (y in 0 until cars.size)
+                for (x in 0 until cars[y].size)
+                    cars[y][x] = data[y][x]
+        }
+
     override fun get(vec: Vec): Value {
         return cars[vec.y][vec.x]
     }

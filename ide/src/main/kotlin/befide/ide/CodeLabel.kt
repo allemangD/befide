@@ -1,6 +1,7 @@
 package befide.ide
 
 import befide.befunge.core.Interpreter
+import befide.befunge.state.Value
 import befide.befunge.state.Vec
 import javafx.beans.property.ObjectProperty
 import javafx.beans.property.SimpleObjectProperty
@@ -8,11 +9,13 @@ import javafx.scene.control.Label
 import tornadofx.*
 
 class CodeLabel(val pos: Vec, val cursorPos: ObjectProperty<Vec>, val interp: Interpreter) : Label() {
-    val charProperty = SimpleObjectProperty<Char>('\u0000')
-    var char: Char by charProperty
+    var valueProperty = SimpleObjectProperty<Value>(Value(' '))
+    var value: Value by valueProperty
 
     fun restyle() {
         styleClass.setAll("code")
+
+        val char = value.asChar ?: '\u2022'
 
         if (char in "0123456789") styleClass.add("code-num")
         if (char in "gp") styleClass.add("code-funge")
@@ -27,14 +30,14 @@ class CodeLabel(val pos: Vec, val cursorPos: ObjectProperty<Vec>, val interp: In
     }
 
     init {
-        textProperty().bind(charProperty.stringBinding { it?.toString() ?: " " })
+        textProperty().bind(valueProperty.stringBinding { it?.asChar?.toString() ?: "\u2022" })
 
         setOnMouseClicked {
             cursorPos.value = pos
         }
 
-        charProperty.addListener { _, _, _ -> restyle() }
+        valueProperty.addListener { _, _, _ -> restyle() }
 
-        char = ' '
+        restyle()
     }
 }

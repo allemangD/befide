@@ -1,14 +1,12 @@
 package befide.ide
 
 import befide.befunge.core.Interpreter
+import befide.befunge.state.Value
 import befide.befunge.state.Vec
 import javafx.beans.property.ObjectProperty
-import javafx.beans.property.SimpleBooleanProperty
 import javafx.beans.property.SimpleObjectProperty
 import javafx.scene.input.KeyCode
 import tornadofx.*
-import tornadofx.getValue
-import tornadofx.setValue
 
 operator fun <T> List<List<T>>.get(v: Vec): T = this[v.y][v.x]
 
@@ -20,6 +18,14 @@ class CodeView(val interp: Interpreter) : View() {
     var cursorDelta by cursorDeltaProperty
 
     var labels: List<List<CodeLabel>> = List(25) { y -> List(80) { x -> CodeLabel(Vec(x, y), cursorPosProperty, interp) } }
+
+    var values: List<List<Value>>
+        get() = labels.map { it.map { it.value } }
+        set(data) {
+            for (y in 0 until labels.size)
+                for (x in 0 until labels[y].size)
+                    labels[y][x].value = data[y][x]
+        }
 
     init {
         cursorPosProperty.addListener { _, old, new ->
@@ -34,7 +40,7 @@ class CodeView(val interp: Interpreter) : View() {
 
         interp.fungeChanged += {
             for (change in it.changes) {
-                labels[change.vec].char = change.to.asChar ?: '\u2022'
+                labels[change.vec].value = change.to
                 labels[change.vec].restyle()
             }
         }
@@ -47,9 +53,9 @@ class CodeView(val interp: Interpreter) : View() {
     var src: String
         get() = labels.joinToString("\n") { row ->
             row.dropLastWhile { lbl ->
-                lbl.char.isWhitespace()
+                lbl.value.asChar?.isWhitespace() ?: false
             }.joinToString("") { lbl ->
-                lbl.char.toString()
+                lbl.value.asChar?.toString() ?: "\u2022"
             }
         }
         set(value) {
@@ -57,7 +63,8 @@ class CodeView(val interp: Interpreter) : View() {
 
             for (row in labels) {
                 for (lbl in row) {
-                    lbl.char = lines.getOrNull(lbl.pos.y)?.getOrNull(lbl.pos.x) ?: ' '
+                    val char = lines.getOrNull(lbl.pos.y)?.getOrNull(lbl.pos.x) ?: ' '
+                    lbl.value = Value(char)
                 }
             }
         }
@@ -105,7 +112,7 @@ class CodeView(val interp: Interpreter) : View() {
                             else -> cursorDelta
                         }
 
-                        labels[cursorPos].char = ch
+                        labels[cursorPos].value = Value(ch)
 
                         move()
                     }
@@ -113,7 +120,7 @@ class CodeView(val interp: Interpreter) : View() {
                     ch == '\u0008' -> {  // backspace
                         move(-cursorDelta)
 
-                        labels[cursorPos].char = ' '
+                        labels[cursorPos].value = Value(' ')
                     }
 
                     else -> {

@@ -22,7 +22,8 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
     override val root = hbox {
         button("step") {
             setOnAction {
-                interp.funge.setString(codeView.src)
+                interp.funge.values = codeView.values
+
                 interp.step()
             }
         }
@@ -31,13 +32,15 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
             setOnAction {
                 interp.reset()
                 ioView.reset()
-                codeView.src = interp.funge.toString()
+
+                codeView.values = interp.funge.values
             }
         }
 
         button("run") {
             setOnAction {
-                interp.funge.setString(codeView.src)
+                interp.funge.values = codeView.values
+
                 runTimeline.rate = 10000.0
                 runTimeline.playFromStart()
             }
@@ -45,7 +48,8 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
 
         button("walk") {
             setOnAction {
-                interp.funge.setString(codeView.src)
+                interp.funge.values = codeView.values
+
                 runTimeline.rate = 50.0
                 runTimeline.playFromStart()
             }
@@ -53,7 +57,8 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
 
         button("crawl") {
             setOnAction {
-                interp.funge.setString(codeView.src)
+                interp.funge.values = codeView.values
+
                 runTimeline.rate = 4.0
                 runTimeline.playFromStart()
             }

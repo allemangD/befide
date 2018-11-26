@@ -12,6 +12,8 @@ interface Funge {
     operator fun get(vec: Vec): Value
     operator fun set(vec: Vec, value: Value)
 
+    var values: List<List<Value>>
+
     /**
      * Get the next position to be executed starting at [vec] and stepping by [delta]
      */
