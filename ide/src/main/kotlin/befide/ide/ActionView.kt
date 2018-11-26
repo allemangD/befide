@@ -4,10 +4,12 @@ import befide.befunge.core.Interpreter
 import javafx.animation.Animation
 import javafx.animation.Timeline
 import javafx.beans.property.SimpleBooleanProperty
+import javafx.stage.FileChooser
 import javafx.util.Duration
 import tornadofx.*
 import tornadofx.getValue
 import tornadofx.setValue
+import java.io.File
 
 class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IOView) : View() {
     var runTimeline: Timeline = timeline(false) {
@@ -94,6 +96,20 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
         }
 
         spacer()
+
+        button("open") {
+            setOnAction {
+                val fc = FileChooser()
+                fc.title = "Open Befunge File"
+
+                val file: File? = fc.showOpenDialog(primaryStage)
+                if (file != null){
+                    reset()
+                    codeView.src = file.readText()
+                }
+            }
+            disableWhen(isRunningProperty)
+        }
 
         button("reset") {
             setOnAction { reset() }
