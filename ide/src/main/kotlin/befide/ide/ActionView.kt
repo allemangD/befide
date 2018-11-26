@@ -28,20 +28,16 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
         }
 
         button("reset") {
-            enableWhen(codeView.lockedProperty)
-
             setOnAction {
                 interp.reset()
                 ioView.reset()
                 codeView.src = interp.funge.toString()
-                codeView.locked = false
             }
         }
 
         button("run") {
             setOnAction {
                 interp.funge.setString(codeView.src)
-                codeView.locked = true
                 runTimeline.rate = 10000.0
                 runTimeline.playFromStart()
             }
@@ -50,7 +46,6 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
         button("walk") {
             setOnAction {
                 interp.funge.setString(codeView.src)
-                codeView.locked = true
                 runTimeline.rate = 50.0
                 runTimeline.playFromStart()
             }
@@ -59,7 +54,6 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
         button("crawl") {
             setOnAction {
                 interp.funge.setString(codeView.src)
-                codeView.locked = true
                 runTimeline.rate = 4.0
                 runTimeline.playFromStart()
             }

@@ -19,9 +19,6 @@ class CodeView(val interp: Interpreter) : View() {
     val cursorDeltaProperty = SimpleObjectProperty<Vec>(Vec(1, 0))
     var cursorDelta by cursorDeltaProperty
 
-    val lockedProperty = SimpleBooleanProperty(false)
-    var locked by lockedProperty
-
     var labels: List<List<CodeLabel>> = List(25) { y -> List(80) { x -> CodeLabel(Vec(x, y), cursorPosProperty, interp) } }
 
     init {
@@ -97,8 +94,6 @@ class CodeView(val interp: Interpreter) : View() {
         }
 
         setOnKeyTyped {
-            if (locked) return@setOnKeyTyped
-
             for (ch in it.character) {
                 when {
                     !ch.isISOControl() -> {
