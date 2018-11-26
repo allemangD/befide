@@ -19,9 +19,11 @@ class StackView(val interp: Interpreter) : View() {
         textarea(charOutProperty) {
             maxWidth = 1.0
             paddingHorizontal = 1
+            prefRowCount = interp.funge.height
             isEditable = false
         }
         textarea(longOutProperty) {
+            prefRowCount = interp.funge.height
             prefWidth = 90.0
             isEditable = false
         }
@@ -29,18 +31,18 @@ class StackView(val interp: Interpreter) : View() {
 
     private fun <T> getStackStr(mapping: (Value) -> T): String {
         return interp.stack.takeLast(interp.funge.height)
-                .map (mapping)
+                .map(mapping)
                 .padEnd(interp.funge.height, "")
-                .reversed()
+//                .reversed()
                 .joinToString("\n")
     }
 
     init {
-        charOut = getStackStr { it.asChar ?: '*'}
+        charOut = getStackStr { it.asChar ?: '*' }
         longOut = getStackStr { it.value }
 
         interp.stackChanged += {
-            charOut = getStackStr { it.asChar ?: '*'}
+            charOut = getStackStr { it.asChar ?: '*' }
             longOut = getStackStr { it.value }
         }
     }

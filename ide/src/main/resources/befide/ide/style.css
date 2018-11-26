@@ -6,6 +6,7 @@
 .code, .text-area {
     -fx-font-family: Consolas, monospace;
     -fx-text-fill: black;
+    -fx-font-size: 18;
 }
 
 .code-view, .text-area {
@@ -35,7 +36,7 @@
     -fx-text-fill: #ffa235;
 }
 
-.code-stop{
+.code-stop {
     -fx-font-weight: bold;
     -fx-text-fill: #990208;
 }
