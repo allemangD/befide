@@ -1,6 +1,7 @@
 package befide.ide
 
 import befide.befunge.core.Interpreter
+import befide.befunge.state.IpMode
 import javafx.animation.Animation
 import javafx.animation.Timeline
 import javafx.beans.property.SimpleBooleanProperty
@@ -13,11 +14,13 @@ import tornadofx.setValue
 import java.io.File
 
 class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IOView) : View() {
+    val stepProperty = SimpleBooleanProperty(false)
+    var step by stepProperty
+
     var runTimeline: Timeline = timeline(false) {
         keyframe(Duration.seconds(0.0)) {
             setOnFinished {
-                if (!interp.step())
-                    this@timeline.stop()
+                step = interp.step()
             }
         }
         keyframe(Duration.seconds(1.0)) {}
@@ -51,7 +54,7 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
 
         interp.funge.values = codeView.values
 
-        interp.step()
+        step = interp.step()
     }
 
     fun stop() {
@@ -136,7 +139,7 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
 
         button("reset") {
             setOnAction { reset() }
-            enableWhen(canResetProperty.and(isRunningProperty.not()))
+            enableWhen(canResetProperty)
         }
 
         separator {}
@@ -162,6 +165,12 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
                 saveFile = null
             }
             disableWhen(isRunningProperty)
+        }
+    }
+
+    init {
+        stepProperty.onChange {
+            if (!it) stop()
         }
     }
 }

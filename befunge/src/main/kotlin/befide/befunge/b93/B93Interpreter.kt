@@ -266,7 +266,7 @@ class B93Interpreter : Interpreter {
         outBuf.delete(0, outBuf.length)
         outputChanged.invoke(OutputEvent())
         ip.mode = IpMode.Inactive
-        return true
+        return false
     }
 
     private fun pushDig(dig: Char): Boolean {

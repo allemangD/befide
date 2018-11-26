@@ -36,6 +36,8 @@ class IOView(val interp: Interpreter) : View() {
         textarea(oldinputProperty) {
             isEditable = false
             prefHeight = 0.0
+
+            oldinputProperty.onChange { scrollTop = Double.MAX_VALUE }
         }
         textfield {
             onAction = EventHandler {
