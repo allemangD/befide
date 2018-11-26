@@ -35,7 +35,7 @@ class StackView(val interp: Interpreter) : View() {
     init {
         charOut = getStackStr { "${it.asChar ?: '\u2022'} (${it.value})" }
 
-        interp.stackChanged += { _ ->
+        interp.stackChanged += {
             charOut = getStackStr { "${it.asChar ?: '\u2022'} (${it.value})" }
         }
     }
