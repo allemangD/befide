@@ -13,7 +13,7 @@ import tornadofx.getValue
 import tornadofx.setValue
 import java.io.File
 
-class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IOView) : View() {
+class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IOView, val editorView: EditorView) : View() {
     val stepProperty = SimpleBooleanProperty(false)
     var step by stepProperty
 
@@ -103,9 +103,17 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
         if (file != null) {
             saveFile = file
 
+            editorView.title = "${saveFile.nameWithoutExtension} [${saveFile.absolutePath}] - Befide"
+
             reset()
             codeView.src = saveFile.readText()
         }
+    }
+
+    fun new(){
+        clearCode()
+        saveFile = null
+        editorView.title = "Befide"
     }
 
     override val root = hbox {
@@ -160,10 +168,7 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
         }
 
         button("new") {
-            setOnAction {
-                clearCode()
-                saveFile = null
-            }
+            setOnAction { new() }
             disableWhen(isRunningProperty)
         }
     }
@@ -172,5 +177,7 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
         stepProperty.onChange {
             if (!it) stop()
         }
+
+        new()
     }
 }

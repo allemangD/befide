@@ -10,7 +10,7 @@ class EditorView : View("Befide") {
     private val codeView = CodeView(interp)
     private val stackView = StackView(interp)
     private val ioView = IOView(interp)
-    private val actionView = ActionView(interp, codeView, ioView)
+    private val actionView = ActionView(interp, codeView, ioView, this)
 
     override val root = borderpane {
         top { add(actionView) }
