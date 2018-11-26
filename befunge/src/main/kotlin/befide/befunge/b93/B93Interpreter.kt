@@ -296,7 +296,7 @@ class B93Interpreter : Interpreter {
             '@' -> terminate()
             in '0'..'9' -> pushDig(car)
             ' ' -> true
-            else -> noOp()
+            else -> true
         }
     }
 
