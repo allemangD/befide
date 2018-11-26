@@ -3,8 +3,11 @@ package befide.ide
 import befide.befunge.core.Interpreter
 import javafx.animation.Animation
 import javafx.animation.Timeline
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.util.Duration
 import tornadofx.*
+import tornadofx.getValue
+import tornadofx.setValue
 
 class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IOView) : View() {
     var runTimeline: Timeline = timeline(false) {
@@ -19,55 +22,87 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
         cycleCount = Animation.INDEFINITE
     }
 
+    val isRunningProperty = SimpleBooleanProperty(false)
+    var isRunning by isRunningProperty
+
+    val canResetProperty = SimpleBooleanProperty(false)
+    var canReset by canResetProperty
+
+    fun start(rate: Double) {
+        stop()
+
+        isRunning = true
+        canReset = true
+
+        interp.funge.values = codeView.values
+
+        runTimeline.rate = rate
+        runTimeline.playFromStart()
+    }
+
+    fun step() {
+        canReset = true
+
+        interp.funge.values = codeView.values
+
+        interp.step()
+    }
+
+    fun stop() {
+        isRunning = false
+
+        runTimeline.stop()
+    }
+
+    fun reset() {
+        stop()
+        interp.reset()
+        ioView.reset()
+        canReset = false
+    }
+
+    fun clearCode() {
+        reset()
+        codeView.clear()
+    }
+
     override val root = hbox {
         button("step") {
-            setOnAction {
-                interp.funge.values = codeView.values
-
-                interp.step()
-            }
+            setOnAction { step() }
+            disableWhen(isRunningProperty)
         }
 
-        button("reset") {
-            setOnAction {
-                interp.reset()
-                ioView.reset()
-
-                codeView.values = interp.funge.values
-            }
-        }
+        separator { }
 
         button("run") {
-            setOnAction {
-                interp.funge.values = codeView.values
-
-                runTimeline.rate = 10000.0
-                runTimeline.playFromStart()
-            }
+            setOnAction { start(10000.0) }
         }
 
         button("walk") {
-            setOnAction {
-                interp.funge.values = codeView.values
-
-                runTimeline.rate = 50.0
-                runTimeline.playFromStart()
-            }
+            setOnAction { start(50.0) }
         }
 
         button("crawl") {
-            setOnAction {
-                interp.funge.values = codeView.values
-
-                runTimeline.rate = 4.0
-                runTimeline.playFromStart()
-            }
+            setOnAction { start(4.0) }
         }
 
+        separator {}
+
         button("stop") {
-            setOnAction {
-                runTimeline.stop()
-            }
+            setOnAction { stop() }
+            enableWhen(isRunningProperty)
+        }
+
+        spacer()
+
+        button("reset") {
+            setOnAction { reset() }
+            enableWhen(canResetProperty.and(isRunningProperty.not()))
+        }
+
+        button("clear") {
+            setOnAction { clearCode() }
+            disableWhen(isRunningProperty)
         }
     }
 }

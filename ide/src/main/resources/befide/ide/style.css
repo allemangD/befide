@@ -3,7 +3,7 @@
     -fx-font-fill: black;
 }
 
-.code, .text-area {
+.code, .text-area, .stack-pane {
     -fx-font-family: Consolas, monospace;
     -fx-text-fill: black;
     -fx-font-size: 18;
@@ -14,7 +14,6 @@
     -fx-border-radius: 2px;
     -fx-border-width: 1px;
     -fx-background-color: #fff;
-    -fx-graphic: none;
 }
 
 .code-num {

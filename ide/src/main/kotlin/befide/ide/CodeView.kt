@@ -50,6 +50,14 @@ class CodeView(val interp: Interpreter) : View() {
         cursorPos = interp.funge.nextVec(cursorPos, delta ?: cursorDelta)
     }
 
+    fun clear() {
+        for (row in labels) {
+            for (lbl in row) {
+                lbl.value = Value(' ')
+            }
+        }
+    }
+
     var src: String
         get() = labels.joinToString("\n") { row ->
             row.dropLastWhile { lbl ->

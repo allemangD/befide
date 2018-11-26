@@ -7,3 +7,7 @@ class MainApp : App(EditorView::class) {
         importStylesheet(resources["style.css"])
     }
 }
+
+fun main(args: Array<String>) {
+    launch<MainApp>(args)
+}

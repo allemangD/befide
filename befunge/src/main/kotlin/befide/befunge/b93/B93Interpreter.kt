@@ -29,7 +29,7 @@ class B93Interpreter : Interpreter {
     override val stdInput = LinkedList<Char>()
     override val stdOutput = LinkedList<String>()
     private var outBuf: StringBuffer = StringBuffer()
-    private var bufLimit = 10
+    private var bufLimit = 0
 
     private val fungeMods = HashMap<Vec,Value>()
 
