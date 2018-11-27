@@ -9,9 +9,6 @@ interface Funge<V, D : Data> {
     val data: Map<V, D>
     val src: String
 
-    fun defaultData(): D
-    fun defaultChar(): Char
-
     fun next(pos: V, delta: V): V
 
     operator fun get(pos: V): D

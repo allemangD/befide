@@ -1,12 +1,25 @@
 package befide.befunge.core.state
 
-interface MutableFunge<V, D : Data>
+import befide.befunge.core.events.FungeChange
+import befide.befunge.core.util.Event
+
+abstract class MutableFunge<V, D : Data>
     : Funge<V, D> {
 
-    override var data: Map<V, D>
-    override var src: String
+    abstract override var data: Map<V, D>
+    abstract override var src: String
 
-    operator fun set(pos: V, data: D)
+    override val onChange = Event<FungeChange<V, D>>()
 
-    fun clear()
+    fun notify(pos: V, op: () -> Unit) {
+        val from = this[pos]
+        op()
+        val to = this[pos]
+
+        onChange(FungeChange(pos, from, to))
+    }
+
+    abstract operator fun set(pos: V, data: D)
+
+    abstract fun clear()
 }

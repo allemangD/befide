@@ -27,4 +27,13 @@ data class Vec2(val x: Int, val y: Int) {
     operator fun unaryMinus() = Vec2(-x, -y)
 
     infix fun mod(o: Vec2) = Vec2(x mod o.x, y mod o.y)
+
+    operator fun rangeTo(o: Vec2) = Bounds2(x..o.x, y..o.y)
+    infix fun until(o: Vec2) = Bounds2(x until o.x, y until o.y)
+}
+
+data class Bounds2(val x: IntRange, val y: IntRange) {
+    override fun toString(): String = "($x, $y)"
+
+    operator fun contains(o: Vec2): Boolean = o.x in x && o.y in y
 }
