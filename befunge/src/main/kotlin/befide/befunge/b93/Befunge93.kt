@@ -41,7 +41,7 @@ fun main(args: Array<String>) {
 // @               ^  p3\" ":<
 //2 234567890123456789012345678901234567890123456789012345678901234567890123456789"""
 
-    int.funge.src = """fedcba987654321>:#._@"""
+    int.funge.src = """fedc;ba9876;54321>:#._@"""
 
     while (int.ip.mode != PointerMode.Terminated) {
         int.step()

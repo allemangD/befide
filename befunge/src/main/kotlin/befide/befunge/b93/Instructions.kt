@@ -84,6 +84,8 @@ class B93Extras : InstructionSet<Vec2, LongData, PointerMode> {
                     move()
                     push(instr)
                 }
+
+                ';' -> do move() while (instr.char != ';')
             }
         }
         return true
