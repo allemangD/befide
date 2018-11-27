@@ -1,8 +1,8 @@
-package befide.befunge.b93
+package befide.befunge.b93.state
 
-import befide.befunge.core.FungeChange
-import befide.befunge.core.MutableFunge
-import befide.befunge.events.Event
+import befide.befunge.core.events.FungeChange
+import befide.befunge.core.state.MutableFunge
+import befide.befunge.core.util.Event
 
 class Funge93
     : MutableFunge<Vec2, LongData> {

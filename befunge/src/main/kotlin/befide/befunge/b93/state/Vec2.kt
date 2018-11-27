@@ -1,4 +1,4 @@
-package befide.befunge.b93
+package befide.befunge.b93.state
 
 import befide.befunge.core.util.mod
 

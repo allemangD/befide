@@ -1,11 +1,10 @@
-package befide.befunge.b93
+package befide.befunge.b93.state
 
-import befide.befunge.core.Data
+import befide.befunge.core.state.Data
 import befide.befunge.core.util.mod
 
 data class LongData(val data: Long)
     : Data {
-
     companion object {
         val SPACE = LongData(' ')
         val ZERO = LongData(0)

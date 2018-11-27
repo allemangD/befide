@@ -1,4 +1,4 @@
-package befide.befunge.events
+package befide.befunge.core.util
 
 import java.util.function.Consumer
 
