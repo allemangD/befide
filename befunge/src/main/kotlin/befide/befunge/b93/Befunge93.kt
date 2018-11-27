@@ -24,11 +24,6 @@ class Interpreter93(stdinSrc: PipedWriter, stdoutDest: PipedReader)
     override val stdout: PipedWriter = PipedWriter(stdoutDest)
 
     override val instructionSet = B93Instructions() + B93Extras()
-
-    override fun reset() {
-        stdin.readAll()
-        stdout.flush()
-    }
 }
 
 fun main(args: Array<String>) {

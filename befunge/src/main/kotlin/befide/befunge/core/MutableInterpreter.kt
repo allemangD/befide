@@ -7,6 +7,7 @@ import befide.befunge.core.state.Data
 import befide.befunge.core.state.MutableFunge
 import befide.befunge.core.state.MutablePointer
 import befide.befunge.core.util.Event
+import befide.befunge.core.util.readAll
 import java.util.*
 
 abstract class MutableInterpreter<V, D : Data, M : Enum<M>>
@@ -66,5 +67,10 @@ abstract class MutableInterpreter<V, D : Data, M : Enum<M>>
         for (datum in data) {
             notifyStack(StackOp.Push) { stack.push(datum) }
         }
+    }
+
+    override fun reset() {
+        stdin.readAll()
+        stdout.flush()
     }
 }
