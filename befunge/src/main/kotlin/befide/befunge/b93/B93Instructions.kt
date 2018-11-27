@@ -7,19 +7,19 @@ import befide.befunge.core.InstructionSet
 import befide.befunge.core.MutableInterpreter
 import befide.befunge.core.util.chooseOne
 
-class Befunge93Instructions : InstructionSet<Vec2, LongData, PointerMode> {
-    override fun MutableInterpreter<Vec2, LongData, PointerMode>.handle() {
+class B93Instructions : InstructionSet<Vec2, LongData, PointerMode> {
+    override fun MutableInterpreter<Vec2, LongData, PointerMode>.handle(): Boolean {
         when (mode) {
-            PointerMode.Terminated -> return
+            PointerMode.Terminated -> return true
             PointerMode.String -> when (instr.char) {
-                null -> Unit
+                null -> return false
                 '"' -> mode = PointerMode.Normal
                 else -> push(instr)
             }
             PointerMode.Normal -> when (instr.char) {
-                null -> Unit
+                null -> return false
 
-                in "0123456789abcdef" -> push(LongData(instr.char.toString().toLong(16)))
+                in "0123456789" -> push(LongData(instr.char.toString().toLong(16)))
 
                 '+' -> pop(2).let { (b, a) -> push(a + b) }
                 '-' -> pop(2).let { (b, a) -> push(a - b) }
@@ -61,7 +61,31 @@ class Befunge93Instructions : InstructionSet<Vec2, LongData, PointerMode> {
                 }
 
                 '@' -> mode = PointerMode.Terminated
+
+                else -> return false
             }
         }
+
+        return true
+    }
+}
+
+class B93Extras : InstructionSet<Vec2, LongData, PointerMode> {
+    override fun MutableInterpreter<Vec2, LongData, PointerMode>.handle(): Boolean {
+        when (mode) {
+            PointerMode.Terminated -> return true
+            PointerMode.String -> return false
+            PointerMode.Normal -> when (instr.char) {
+                null -> return false
+
+                in "0123456789abcdef" -> push(LongData(instr.char.toString().toLong(16)))
+
+                '\'' -> {
+                    move()
+                    push(instr)
+                }
+            }
+        }
+        return true
     }
 }
