@@ -6,8 +6,11 @@ import befide.befunge.core.util.Event
 interface Funge<V, D : Data> {
     val size: V
 
-    val data: List<List<D>>
+    val data: Map<V, D>
     val src: String
+
+    fun defaultData(): D
+    fun defaultChar(): Char
 
     fun next(pos: V, delta: V): V
 
