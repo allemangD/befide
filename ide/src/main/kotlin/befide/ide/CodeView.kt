@@ -131,6 +131,25 @@ class CodeView(val interp: Interpreter) : View() {
                         labels[cursorPos].value = Value(' ')
                     }
 
+                    ch == '\u000d' -> when (cursorDelta) { // return
+                        Vec(1, 0) -> {
+                            move(Vec(0, 1))
+                            cursorPos = Vec(0, cursorPos.y)
+                        }
+                        Vec(-1, 0) -> {
+                            move(Vec(0, -1))
+                            cursorPos = Vec(interp.funge.width - 1, cursorPos.y)
+                        }
+                        Vec(0, 1) -> {
+                            move(Vec(-1, 0))
+                            cursorPos = Vec(cursorPos.x, 0)
+                        }
+                        Vec(0, -1) -> {
+                            move(Vec(1, 0))
+                            cursorPos = Vec(cursorPos.x, interp.funge.height - 1)
+                        }
+                    }
+
                     else -> {
                         println("'$ch' (${ch.toInt()})")
                     }

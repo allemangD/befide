@@ -40,6 +40,8 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
     fun start(rate: Double) {
         stop()
 
+        if (interp.ip.mode == IpMode.Inactive) reset()
+
         isRunning = true
         canReset = true
 
@@ -83,23 +85,23 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
         }
     }
 
-    fun saveAs() {
-        val fc = FileChooser()
-        fc.title = "Save Befunge File"
+    private val chooser: FileChooser = FileChooser().apply {
+        title = "Befunge File"
+        extensionFilters.setAll(
+                FileChooser.ExtensionFilter("Befunge 93", "*.bf", "*.b93"),
+                FileChooser.ExtensionFilter("Befunge 98", "*.bf", "*.b98"))
+    }
 
-        val file: File? = fc.showSaveDialog(primaryStage)
+    fun saveAs() {
+        val file: File? = chooser.showSaveDialog(primaryStage)
         if (file != null) {
             saveFile = file
-
             save()
         }
     }
 
     fun open() {
-        val fc = FileChooser()
-        fc.title = "Open Befunge File"
-
-        val file: File? = fc.showOpenDialog(primaryStage)
+        val file: File? = chooser.showOpenDialog(primaryStage)
         if (file != null) {
             saveFile = file
 
@@ -110,7 +112,7 @@ class ActionView(val interp: Interpreter, val codeView: CodeView, val ioView: IO
         }
     }
 
-    fun new(){
+    fun new() {
         clearCode()
         saveFile = null
         editorView.title = "Befide"
