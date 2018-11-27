@@ -12,7 +12,7 @@ internal operator fun <T> Handler<T>.invoke(t: T) = accept(t)
  * Sample usage:
  *
  * ```
- * data class ServerEvent(val joined: Boolean, val user: String)
+ * contents class ServerEvent(val joined: Boolean, val user: String)
 
  * fun main(args: Array<String>) {
  *     val event = Event<ServerEvent>()
