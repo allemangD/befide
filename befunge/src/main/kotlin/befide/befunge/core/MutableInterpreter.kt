@@ -6,6 +6,7 @@ import befide.befunge.core.events.StackOp
 import befide.befunge.core.state.Data
 import befide.befunge.core.state.MutableFunge
 import befide.befunge.core.state.MutablePointer
+import befide.befunge.core.util.Event
 import java.util.*
 
 abstract class MutableInterpreter<V, D : Data, M : Enum<M>>
@@ -15,6 +16,9 @@ abstract class MutableInterpreter<V, D : Data, M : Enum<M>>
     abstract override val stack: Stack<D>
 
     abstract val instructionSet: InstructionSet<V, D, M>
+
+    override val onIpChange: Event<IpChange<V, M>> = Event()
+    override val onStackChange: Event<StackChange<D>> = Event()
 
     override fun step() {
         instructionSet.step(this)
@@ -51,11 +55,11 @@ abstract class MutableInterpreter<V, D : Data, M : Enum<M>>
     }
 
     fun pop(): D = notifyStack(StackOp.Pop) {
-        if (stack.empty()) stackDefault() else stack.pop()
+        return@notifyStack if (stack.empty()) stackDefault() else stack.pop()
     }
 
     fun pop(n: Int): List<D> {
-        return (0 until n).map { notifyStack(StackOp.Pop) { stack.pop() } }
+        return (0 until n).map { pop() }
     }
 
     fun push(vararg data: D) {

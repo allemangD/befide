@@ -20,9 +20,6 @@ class Interpreter93(stdinSrc: PipedWriter, stdoutDest: PipedReader)
 
     override fun stackDefault() = LongData.ZERO
 
-    override val onIpChange = Event<IpChange<Vec2, PointerMode>>()
-    override val onStackChange = Event<StackChange<LongData>>()
-
     override val stdin: PipedReader = PipedReader(stdinSrc)
     override val stdout: PipedWriter = PipedWriter(stdoutDest)
 
@@ -40,16 +37,16 @@ fun main(args: Array<String>) {
 
     val int = Interpreter93(stdinSrc, stdoutDest)
 
-    int.onIpChange += {
-        println(it.to.pos)
-    }
+//    int.onIpChange += {
+//        println(it.to.pos)
+//    }
 
 //    int.funge.src = """2>:3g" "-!v\  g30          <
 // |!`"O":+1_:.:03p>03g+:"O"`|
 // @               ^  p3\" ":<
 //2 234567890123456789012345678901234567890123456789012345678901234567890123456789"""
 
-    int.funge.src = """048ce.....@"""
+    int.funge.src = """fedcba987654321>:#._@"""
 
     while (int.ip.mode != PointerMode.Terminated) {
         int.step()

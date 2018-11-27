@@ -36,17 +36,17 @@ class B93Instructions : InstructionSet<Vec2, LongData, PointerMode> {
                 '?' -> delta = Vec2.DIRS.chooseOne()
                 '#' -> move()
 
-                '_' -> pop().let { n -> delta = if (n.data == 0L) Vec2.RIGHT else Vec2.LEFT }
-                '|' -> pop().let { n -> delta = if (n.data == 0L) Vec2.DOWN else Vec2.UP }
+                '_' -> pop(1).let { (n) -> delta = if (n.data == 0L) Vec2.RIGHT else Vec2.LEFT }
+                '|' -> pop(1).let { (n) -> delta = if (n.data == 0L) Vec2.DOWN else Vec2.UP }
 
                 '"' -> mode = PointerMode.String
 
-                ':' -> pop().let { n -> push(n, n) }
+                ':' -> pop(1).let { (n) -> push(n, n) }
                 '\\' -> pop(2).let { (b, a) -> push(b, a) }
-                '$' -> pop()
+                '$' -> pop(1)
 
-                '.' -> pop().let { n -> stdout.write("${n.data} ") }
-                ',' -> pop().let { ch -> stdout.write(ch.data.toChar().toString()) }
+                '.' -> pop(1).let { (n) -> stdout.write("${n.data} ") }
+                ',' -> pop(1).let { (ch) -> stdout.write(ch.data.toChar().toString()) }
 
                 'p' -> pop(3).let { (y, x, n) -> funge[Vec2(x.data.toInt(), y.data.toInt())] = n }
                 'g' -> pop(2).let { (y, x) -> push(funge[Vec2(x.data.toInt(), y.data.toInt())]) }
