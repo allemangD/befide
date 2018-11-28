@@ -8,6 +8,8 @@ import befide.befunge.core.state.Pointer
 import befide.befunge.core.util.Event
 import java.io.PipedReader
 import java.io.PipedWriter
+import java.io.Reader
+import java.io.Writer
 
 interface Interpreter<V, D : Data, M : Enum<M>> {
     val ip: Pointer<V, M>
@@ -20,14 +22,15 @@ interface Interpreter<V, D : Data, M : Enum<M>> {
     val delta: V get() = ip.delta
     val pos: V get() = ip.pos
     val instr: D get() = funge[ip.pos]
+    val next: D get() = funge[funge.next(pos, delta)]
 
     val onIpChange: Event<IpChange<V, M>>
     val onStackChange: Event<StackChange<D>>
 
-    val stdin: PipedReader
-    val stdout: PipedWriter
+    var stdin: Reader?
+    val stdout: Writer?
 
     fun step()
-    fun reset()
+    fun run(afterEach: () -> Unit)
 }
 

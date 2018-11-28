@@ -68,9 +68,4 @@ abstract class MutableInterpreter<V, D : Data, M : Enum<M>>
             notifyStack(StackOp.Push) { stack.push(datum) }
         }
     }
-
-    override fun reset() {
-        stdin.readAll()
-        stdout.flush()
-    }
 }

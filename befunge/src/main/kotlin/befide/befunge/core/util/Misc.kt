@@ -1,6 +1,7 @@
 package befide.befunge.core.util
 
 import java.io.PipedReader
+import java.io.Reader
 import java.util.*
 import kotlin.random.Random
 
@@ -19,10 +20,8 @@ infix fun Long.mod(o: Long): Long {
 
 fun <T> List<T>.chooseOne(): T = this[Random.nextInt(size)]
 
-fun PipedReader.readAll(): String = generateSequence {
-    if (ready()) read().toChar() else null
-}.joinToString("")
+fun <T> Boolean.orNull(block: () -> T): T? = if (this) block() else null
 
-inline fun <reified T> Stack<T>.pop(n: Int): List<T> {
-    return (0 until n).map { pop() }
-}
+fun Reader.readAll(): String = generateSequence {
+    ready().orNull { read().toChar() }
+}.joinToString("")

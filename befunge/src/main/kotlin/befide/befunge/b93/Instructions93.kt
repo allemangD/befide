@@ -45,22 +45,26 @@ class B93Instructions : InstructionSet<Vec2, Data93, PointerMode> {
                 '\\' -> pop(2).let { (b, a) -> push(b, a) }
                 '$' -> pop(1)
 
-                '.' -> pop(1).let { (n) -> stdout.write("${n.data} ") }
-                ',' -> pop(1).let { (ch) -> stdout.write(ch.data.toChar().toString()) }
+                '.' -> pop(1).let { (n) -> stdout?.write("${n.data} ") }
+                ',' -> pop(1).let { (ch) -> stdout?.write(ch.data.toChar().toString()) }
 
                 'p' -> pop(3).let { (y, x, n) -> funge[Vec2(x.data.toInt(), y.data.toInt())] = n }
                 'g' -> pop(2).let { (y, x) -> push(funge[Vec2(x.data.toInt(), y.data.toInt())]) }
 
-                '~' -> push(Data93(stdin.read().toLong()))
+                '~' -> push(Data93(stdin?.read()?.toLong() ?: 0L))
                 '&' -> {
                     val chars = generateSequence {
-                        stdin.read().takeIf { it.toChar().isDigit() }
+                        stdin?.read()?.toChar()?.takeIf { it.isDigit() }
                     }
-                    val long = chars.joinToString("").toLong()
+                    val long = chars.joinToString("") {
+                        it.toString()
+                    }.ifEmpty { "0" }.toLong()
                     push(Data93(long))
                 }
 
                 '@' -> mode = PointerMode.Terminated
+
+                ' ' -> do move() while (next.char == ' ')
 
                 else -> return false
             }
