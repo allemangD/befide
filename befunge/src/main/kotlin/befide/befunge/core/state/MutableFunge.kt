@@ -11,7 +11,7 @@ abstract class MutableFunge<V, D : Data>
 
     override val onChange = Event<FungeChange<V, D>>()
 
-    fun notify(pos: V, op: () -> Unit) {
+    fun notifyChanged(pos: V, op: () -> Unit) {
         val from = this[pos]
         op()
         val to = this[pos]

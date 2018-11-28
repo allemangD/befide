@@ -17,7 +17,7 @@ class Funge93
 
     override fun get(pos: Vec2): Data93 = contents[pos] ?: DEFAULT_DATA
     override fun set(pos: Vec2, data: Data93) {
-        if (pos in Vec2.ZERO until size) notify(pos) {
+        if (pos in Vec2.ZERO until size) notifyChanged(pos) {
             contents[pos] = data
         }
     }
